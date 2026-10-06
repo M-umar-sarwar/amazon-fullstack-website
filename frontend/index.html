@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon Clone - Full Stack E-Commerce Portal</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        amzNav: '#131921',
+                        amzSubNav: '#232f3e',
+                        amzYellow: '#febd69',
+                        amzYellowHover: '#f3a847',
+                        amzOrange: '#e77600',
+                        amzBtn: '#ffd814',
+                        amzBtnHover: '#f7ca00',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #bbb; border-radius: 99px; }
+        ::-webkit-scrollbar-thumb:hover { background: #888; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .line-clamp-2 {
+            display: -webkit-box;
+            /* -webkit-line-clamp: 2; */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans flex flex-col min-h-screen antialiased selection:bg-amzYellow selection:text-slate-900">
+
+    <!-- MAIN NAVBAR HEADER -->
+    <header class="bg-amzNav text-white sticky top-0 z-40 shadow-lg">
+        <div class="max-w-[1500px] mx-auto px-3 py-1.5 flex items-center justify-between gap-2 sm:gap-4">
+            
+            <!-- Amazon Logo -->
+            <a href="#" onclick="showCategory('All'); return false;" class="flex items-center space-x-1 p-1.5 rounded hover:outline outline-1 outline-white transition">
+                <span class="text-2xl font-black tracking-tight text-white flex items-center">
+                    amazon<span class="text-amzYellow text-xs font-bold ml-0.5">.clone</span>
+                </span>
+            </a>
+
+            <!-- Deliver To Location -->
+            <div class="hidden lg:flex items-center space-x-1.5 text-xs p-1.5 hover:outline outline-1 outline-white rounded cursor-pointer">
+                <i class="fa-solid fa-location-dot text-amzYellow text-sm"></i>
+                <div class="leading-tight">
+                    <p class="text-[10px] text-gray-300 font-medium">Deliver to Customer</p>
+                    <p class="font-bold text-white">Seattle 98101</p>
+                </div>
+            </div>
+
+            <!-- Amazon Search Bar -->
+            <div class="flex-1 flex items-center max-w-2xl bg-white rounded-md overflow-hidden text-slate-900 focus-within:ring-2 focus-within:ring-amzOrange">
+                <select id="searchCategorySelect" onchange="handleCategoryFilterChange(this.value)" class="bg-gray-100 text-xs font-semibold px-2 py-2.5 border-r border-gray-300 outline-none hover:bg-gray-200 cursor-pointer hidden sm:block">
+                    <option value="All">All Departments</option>
+                    <option value="Electronics">Electronics</option>
+                    <option value="Fashion">Fashion</option>
+                    <option value="Home & Kitchen">Home & Kitchen</option>
+                    <option value="Books">Books</option>
+                    <option value="Gaming">Gaming</option>
+                    <option value="Beauty">Beauty</option>
+                </select>
+                
+                <input type="text" id="searchInput" onkeyup="filterProductsBySearch()" placeholder="Search Amazon products..." class="w-full px-3 py-2 text-xs outline-none text-slate-900 font-medium">
+
+                <button onclick="filterProductsBySearch()" class="bg-amzYellow hover:bg-amzYellowHover text-slate-900 px-4 py-2.5 transition flex items-center justify-center font-bold">
+                    <i class="fa-solid fa-magnifying-glass text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Header Action Right Icons -->
+            <div class="flex items-center space-x-2 sm:space-x-4 text-xs">
+                
+                <!-- Account Menu -->
+                <div class="p-1.5 hover:outline outline-1 outline-white rounded cursor-pointer hidden sm:block">
+                    <p class="text-[10px] text-gray-300 font-medium">Hello, Customer</p>
+                    <p class="font-bold flex items-center text-white">Account & Lists <i class="fa-solid fa-caret-down text-[10px] ml-1 text-gray-400"></i></p>
+                </div>
+
+                <!-- Orders Button -->
+                <button onclick="switchView('orders')" id="ordersTabBtn" class="p-1.5 hover:outline outline-1 outline-white rounded transition text-left">
+                    <p class="text-[10px] text-gray-300 font-medium">Returns</p>
+                    <p class="font-bold text-white">& Orders (<span id="ordersCountBadge">0</span>)</p>
+                </button>
+
+                <!-- Add Custom Product Button -->
+                <button onclick="openAddProductModal()" class="bg-amzBtn hover:bg-amzBtnHover text-slate-900 px-3 py-1.5 rounded-md font-black flex items-center gap-1.5 transition text-xs shadow-sm">
+                    <i class="fa-solid fa-plus-circle text-xs"></i>
+                    <span class="hidden md:inline">Sell Product</span>
+                </button>
+
+                <!-- Shopping Cart Icon & Counter -->
+                <button onclick="openCartDrawer()" class="relative p-1.5 hover:outline outline-1 outline-white rounded flex items-center text-amzYellow">
+                    <i class="fa-solid fa-cart-shopping text-2xl"></i>
+                    <span id="cartCounterBadge" class="absolute -top-0.5 left-3.5 bg-amzOrange text-white font-black text-[10px] w-4 h-4 rounded-full flex items-center justify-center shadow">
+                        0
+                    </span>
+                    <span class="font-bold text-white text-xs ml-1 hidden sm:inline">Cart</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- SUB NAVBAR BAR -->
+        <div class="bg-amzSubNav text-white text-xs px-3 py-1.5 flex items-center justify-between overflow-x-auto no-scrollbar">
+            <div class="flex items-center space-x-4 font-medium flex-nowrap">
+                <button onclick="showCategory('All')" class="flex items-center space-x-1 hover:text-amzYellow font-bold">
+                    <i class="fa-solid fa-bars text-sm"></i> <span>All</span>
+                </button>
+                <button onclick="showCategory('Electronics')" class="cat-pill whitespace-nowrap hover:text-amzYellow px-2 py-0.5 rounded">Electronics</button>
+                <button onclick="showCategory('Fashion')" class="cat-pill whitespace-nowrap hover:text-amzYellow px-2 py-0.5 rounded">Fashion</button>
+                <button onclick="showCategory('Home & Kitchen')" class="cat-pill whitespace-nowrap hover:text-amzYellow px-2 py-0.5 rounded">Home & Kitchen</button>
+                <button onclick="showCategory('Books')" class="cat-pill whitespace-nowrap hover:text-amzYellow px-2 py-0.5 rounded">Books</button>
+                <button onclick="showCategory('Gaming')" class="cat-pill whitespace-nowrap hover:text-amzYellow px-2 py-0.5 rounded">Gaming</button>
+                <button onclick="showCategory('Beauty')" class="cat-pill whitespace-nowrap hover:text-amzYellow px-2 py-0.5 rounded">Beauty</button>
+            </div>
+
+            <div class="hidden md:flex items-center space-x-2 text-amzYellow font-semibold text-[11px] flex-shrink-0">
+                <i class="fa-solid fa-truck-fast"></i>
+                <span>FREE Shipping on orders over $35</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT VIEW WRAPPER -->
+    <main class="flex-1 max-w-[1500px] w-full mx-auto p-3 sm:p-5 space-y-5">
+
+        <!-- SHOPPING VIEW -->
+        <div id="shopView" class="space-y-5">
+
+            <!-- Hero Banner -->
+            <div class="relative bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white rounded-2xl p-6 sm:p-8 shadow-md border border-slate-700/60 overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="space-y-3 z-10 max-w-xl">
+                    <span class="bg-amzBtn text-slate-900 font-black text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-full shadow-sm">
+                        Prime Big Deals Week
+                    </span>
+                    <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight leading-tight">Save up to 40% on Top Electronics & Daily Home Goods</h1>
+                    <p class="text-xs text-gray-300 font-medium">Discover limited-time savings on noise-canceling headphones, smart watches, ergonomic office chairs, and organic skincare products.</p>
+                    <div class="pt-2">
+                        <button onclick="showCategory('Electronics')" class="bg-amzBtn hover:bg-amzBtnHover text-slate-900 font-black px-5 py-2.5 rounded-xl shadow-md transition flex items-center gap-2 text-xs">
+                            <span>Explore Tech Deals</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="relative z-10 w-full md:w-auto flex justify-center">
+                    <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop&q=80" alt="Hero Featured Product" class="w-48 sm:w-60 h-48 sm:h-60 object-contain drop-shadow-2xl">
+                </div>
+
+                <div class="absolute -right-12 -bottom-12 w-64 h-64 bg-amzYellow/10 rounded-full blur-3xl pointer-events-none"></div>
+            </div>
+
+            <!-- Category & Sort Filter Bar -->
+            <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div class="flex items-center space-x-2">
+                    <span class="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Department:</span>
+                    <span id="activeCategoryBadge" class="bg-slate-100 font-black px-3 py-1 rounded-lg text-slate-800 border border-slate-200">
+                        All Departments
+                    </span>
+                    <span id="productCountBadge" class="text-slate-400 font-semibold">(0 products)</span>
+                </div>
+
+                <div class="flex items-center space-x-2 ml-auto">
+                    <span class="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Sort by:</span>
+                    <select id="sortBySelect" onchange="sortProducts()" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 font-bold text-slate-700 outline-none cursor-pointer">
+                        <option value="featured">Featured</option>
+                        <option value="lowToHigh">Price: Low to High</option>
+                        <option value="highToLow">Price: High to Low</option>
+                        <option value="topRated">Avg. Customer Review</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Product Grid -->
+            <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <!-- Dynamic Product Cards Grid -->
+            </div>
+        </div>
+
+        <!-- ORDERS & HISTORY VIEW -->
+        <div id="ordersView" class="hidden max-w-4xl mx-auto space-y-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-black text-slate-900">Your Orders & Shipping History</h2>
+                <button onclick="switchView('shop')" class="text-xs font-bold text-amzOrange hover:underline">
+                    <i class="fa-solid fa-arrow-left mr-1"></i> Back to Shopping
+                </button>
+            </div>
+
+            <div id="ordersListContainer" class="space-y-4">
+                <!-- Dynamic Orders -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- SLIDE-OVER SHOPPING CART DRAWER -->
+    <div id="cartDrawer" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden justify-end transition-opacity">
+        <div class="w-full max-w-md bg-white h-full shadow-2xl flex flex-col justify-between p-4 sm:p-6 overflow-hidden">
+            
+            <!-- Drawer Header -->
+            <div class="flex items-center justify-between border-b pb-3">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-cart-shopping text-amzOrange text-lg"></i>
+                    <h3 class="text-base font-black text-slate-900">Your Shopping Cart (<span id="cartDrawerCount">0</span>)</h3>
+                </div>
+                <button onclick="closeCartDrawer()" class="w-8 h-8 rounded-full text-slate-400 hover:bg-slate-100 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Cart Items Scroll List -->
+            <div id="cartItemsList" class="flex-1 overflow-y-auto my-3 space-y-3 pr-1">
+                <!-- Dynamic Cart Items -->
+            </div>
+
+            <!-- Cart Summary Bottom Bar -->
+            <div id="cartSummaryFooter" class="border-t pt-4 space-y-3">
+                <div class="space-y-1.5 text-xs text-slate-600">
+                    <div class="flex justify-between">
+                        <span>Subtotal:</span>
+                        <span id="cartSubtotalText" class="font-bold text-slate-800">$0.00</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Estimated Shipping:</span>
+                        <span id="cartShippingText" class="font-bold text-slate-800">FREE</span>
+                    </div>
+                    <div class="flex justify-between text-slate-900 font-extrabold text-sm border-t pt-2">
+                        <span>Total:</span>
+                        <span id="cartGrandTotalText" class="text-amzOrange">$0.00</span>
+                    </div>
+                </div>
+
+                <button onclick="openCheckoutModal()" class="w-full py-3 bg-amzBtn hover:bg-amzBtnHover font-black text-slate-900 rounded-xl shadow-md transition text-xs flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Proceed to Checkout</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHECKOUT MODAL -->
+    <div id="checkoutModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-base font-black text-slate-900">Amazon Secure Checkout</h3>
+                <button onclick="closeCheckoutModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <form onsubmit="handlePlaceOrder(event)" class="space-y-4 text-xs">
+                <div class="space-y-2">
+                    <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wider">1. Shipping Address</h4>
+                    <input type="text" id="shipName" required placeholder="Full Name" value="Andi Pratama" class="w-full p-2.5 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-amzOrange">
+                    <input type="text" id="shipAddress" required placeholder="Street Address" value="123 Tech Avenue, Suite 400" class="w-full p-2.5 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-amzOrange">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" id="shipCity" required placeholder="City" value="Seattle" class="w-full p-2.5 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-amzOrange">
+                        <input type="text" id="shipZip" required placeholder="ZIP Code" value="98101" class="w-full p-2.5 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-amzOrange">
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wider">2. Payment Option</h4>
+                    <select id="payMethod" class="w-full p-2.5 bg-slate-50 border rounded-xl outline-none font-bold">
+                        <option value="Card">Credit or Debit Card</option>
+                        <option value="COD">Cash on Delivery</option>
+                        <option value="AmazonPay">Amazon Pay Balance</option>
+                    </select>
+                </div>
+
+                <div class="bg-slate-50 p-3 rounded-2xl space-y-1.5 text-slate-600 border border-slate-200">
+                    <div class="flex justify-between"><span>Items Subtotal:</span><span id="checkoutSubtotal">$0.00</span></div>
+                    <div class="flex justify-between"><span>Shipping & Handling:</span><span id="checkoutShipping">FREE</span></div>
+                    <div class="flex justify-between"><span>Estimated Tax (8%):</span><span id="checkoutTax">$0.00</span></div>
+                    <div class="flex justify-between text-slate-900 font-extrabold text-sm border-t pt-1.5">
+                        <span>Order Total:</span>
+                        <span id="checkoutGrandTotal" class="text-amzOrange">$0.00</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-3 bg-amzBtn hover:bg-amzBtnHover font-black text-slate-900 rounded-xl shadow-lg transition text-xs">
+                    Place Your Order
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- SELL ON AMAZON / ADD PRODUCT MODAL -->
+    <div id="addProductModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-store text-amzOrange text-lg"></i>
+                    <h3 class="text-base font-black text-slate-900">Sell a Product on Amazon</h3>
+                </div>
+                <button onclick="closeAddProductModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <form onsubmit="handleCreateProduct(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Product Title *</label>
+                    <input type="text" id="newProdTitle" required placeholder="e.g. Wireless Noise Canceling Headphones" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-amzOrange font-medium">
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Category</label>
+                        <select id="newProdCategory" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold cursor-pointer">
+                            <option value="Electronics">Electronics</option>
+                            <option value="Fashion">Fashion</option>
+                            <option value="Home & Kitchen">Home & Kitchen</option>
+                            <option value="Books">Books</option>
+                            <option value="Gaming">Gaming</option>
+                            <option value="Beauty">Beauty</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Price ($) *</label>
+                        <input type="number" step="0.01" id="newProdPrice" required placeholder="49.99" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-amzOrange font-medium">
+                    </div>
+                </div>
+
+                <!-- Easy Image Selection Gallery + Custom Input -->
+                <div class="space-y-2">
+                    <label class="block font-bold text-slate-700">Choose Image or Enter Custom Link</label>
+                    <p class="text-[11px] text-slate-400">Select a picture below or paste an image link:</p>
+                    
+                    <!-- Preset Gallery Grid -->
+                    <div class="grid grid-cols-4 gap-1.5 p-2 bg-slate-50 border border-slate-200 rounded-xl">
+                        <button type="button" onclick="selectPresetImage('https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop&q=80', this)" class="preset-img-btn border-2 border-amzOrange rounded-lg overflow-hidden h-12 bg-white p-1 focus:outline-none">
+                            <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=150&auto=format&fit=crop&q=80" alt="Headphones" class="w-full h-full object-contain">
+                        </button>
+                        <button type="button" onclick="selectPresetImage('https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80', this)" class="preset-img-btn border-2 border-transparent rounded-lg overflow-hidden h-12 bg-white p-1 focus:outline-none">
+                            <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=150&auto=format&fit=crop&q=80" alt="Watch" class="w-full h-full object-contain">
+                        </button>
+                        <button type="button" onclick="selectPresetImage('https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop&q=80', this)" class="preset-img-btn border-2 border-transparent rounded-lg overflow-hidden h-12 bg-white p-1 focus:outline-none">
+                            <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=150&auto=format&fit=crop&q=80" alt="Shoe" class="w-full h-full object-contain">
+                        </button>
+                        <button type="button" onclick="selectPresetImage('https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&auto=format&fit=crop&q=80', this)" class="preset-img-btn border-2 border-transparent rounded-lg overflow-hidden h-12 bg-white p-1 focus:outline-none">
+                            <img src="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=150&auto=format&fit=crop&q=80" alt="Backpack" class="w-full h-full object-contain">
+                        </button>
+                        <button type="button" onclick="selectPresetImage('https://images.unsplash.com/photo-1517256064527-09c73fc73e38?w=600&auto=format&fit=crop&q=80', this)" class="preset-img-btn border-2 border-transparent rounded-lg overflow-hidden h-12 bg-white p-1 focus:outline-none">
+                            <img src="https://images.unsplash.com/photo-1517256064527-09c73fc73e38?w=150&auto=format&fit=crop&q=80" alt="Kettle" class="w-full h-full object-contain">
+                        </button>
+                        <button type="button" onclick="selectPresetImage('https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=600&auto=format&fit=crop&q=80', this)" class="preset-img-btn border-2 border-transparent rounded-lg overflow-hidden h-12 bg-white p-1 focus:outline-none">
+                            <img src="https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=150&auto=format&fit=crop&q=80" alt="Camera" class="w-full h-full object-contain">
+                        </button>
+                        <button type="button" onclick="selectPresetImage('https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600&auto=format&fit=crop&q=80', this)" class="preset-img-btn border-2 border-transparent rounded-lg overflow-hidden h-12 bg-white p-1 focus:outline-none">
+                            <img src="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=150&auto=format&fit=crop&q=80" alt="Laptop" class="w-full h-full object-contain">
+                        </button>
+                        <button type="button" onclick="selectPresetImage('https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=600&auto=format&fit=crop&q=80', this)" class="preset-img-btn border-2 border-transparent rounded-lg overflow-hidden h-12 bg-white p-1 focus:outline-none">
+                            <img src="https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=150&auto=format&fit=crop&q=80" alt="Skincare" class="w-full h-full object-contain">
+                        </button>
+                    </div>
+
+                    <input type="url" id="newProdImage" value="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop&q=80" placeholder="Or paste any custom image URL..." class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-amzOrange font-mono text-[11px]">
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Description</label>
+                    <textarea id="newProdDesc" rows="2" placeholder="Brief features and specs..." class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-amzOrange font-medium"></textarea>
+                </div>
+
+                <button type="submit" id="submitProductBtn" class="w-full py-3 bg-amzBtn hover:bg-amzBtnHover font-black text-slate-900 rounded-xl shadow-md transition text-xs flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <span>Publish Product to Amazon</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- PRODUCT DETAIL VIEW MODAL -->
+    <div id="productDetailModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 relative overflow-hidden">
+            <button onclick="closeProductDetailModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full text-slate-400 hover:bg-slate-100 flex items-center justify-center">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <div id="productDetailContent" class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs pt-2">
+                <!-- Dynamic Detail Content -->
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 hidden bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl border border-amzYellow flex items-center space-x-2.5 text-xs">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-amzYellow text-sm"></i>
+        <span id="toastText">Action Completed</span>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bg-amzNav text-white text-xs mt-auto">
+        <button onclick="window.scrollTo({ top: 0, behavior: 'smooth' })" class="w-full py-3 bg-amzSubNav hover:bg-slate-700 text-center text-slate-300 font-semibold text-xs transition">
+            Back to top
+        </button>
+        <div class="max-w-[1500px] mx-auto p-6 text-center text-slate-400 text-[11px] space-y-2">
+            <p class="font-bold text-white text-sm">amazon.clone</p>
+            <p>© 2026 Amazon Clone Web App. Interactive storefront with dynamic product seller capability.</p>
+        </div>
+    </footer>
+    <script src="script.js"></script>
+    </body>
+</html>
