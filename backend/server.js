@@ -1,14 +1,52 @@
+
 const express = require("express");
 const mongoose = require("mongoose");
-const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
 
-app.use(cors());
+// ============================================
+// CORS — allow the GitHub Pages frontend
+// ============================================
+
+const allowedOrigins = new Set([
+  "https://m-umar-sarwar.github.io",
+  "http://localhost:5500",
+  "http://127.0.0.1:5500"
+]);
+
+// CORS headers must be set before routes and database handling.
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  if (origin && allowedOrigins.has(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+
+  res.setHeader("Vary", "Origin");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, DELETE, OPTIONS"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Accept, Authorization"
+  );
+
+  // Handle browser preflight requests.
+  if (req.method === "OPTIONS") {
+    return res.status(204).end();
+  }
+
+  next();
+});
+
 app.use(express.json());
 
-// Reuse the MongoDB connection in warm serverless instances
+// ============================================
+// MONGODB CONNECTION
+// ============================================
+
 const cached = global.mongooseCache ||
   (global.mongooseCache = {
     connection: null,
@@ -23,7 +61,7 @@ async function connectDB() {
   const uri = process.env.MONGO_URI;
 
   if (!uri) {
-    throw new Error("MONGO_URI is missing from Vercel Environment Variables.");
+    throw new Error("MONGO_URI is missing.");
   }
 
   if (!cached.promise) {
@@ -42,42 +80,51 @@ async function connectDB() {
   return cached.connection;
 }
 
-// API home
+// ============================================
+// HEALTH CHECKS
+// ============================================
+
 app.get("/", (req, res) => {
   res.json({
     message: "Amazon Clone API is running"
   });
 });
 
-// Health check
 app.get("/health", (req, res) => {
   res.json({
     status: "ok"
   });
 });
 
-// Connect to MongoDB before product requests
+// ============================================
+// CONNECT DATABASE BEFORE PRODUCT REQUESTS
+// ============================================
+
 app.use("/api/products", async (req, res, next) => {
   try {
     await connectDB();
     next();
   } catch (error) {
-    console.error("MongoDB connection failed:", error);
+    console.error("MongoDB connection failed:", error.message);
 
-    // Temporary debugging details
     res.status(500).json({
-      error: "Database connection failed",
-      details: error.message
+      error: "Database connection failed"
     });
   }
 });
 
-// Product routes
+// ============================================
+// PRODUCT ROUTES
+// ============================================
+
 app.use("/api/products", require("./productRoutes"));
 
-// General error handler
+// ============================================
+// GENERAL ERROR HANDLER
+// ============================================
+
 app.use((error, req, res, next) => {
-  console.error("API error:", error);
+  console.error("API error:", error.message);
 
   if (res.headersSent) {
     return next(error);
@@ -88,7 +135,10 @@ app.use((error, req, res, next) => {
   });
 });
 
-// Local development only
+// ============================================
+// LOCAL DEVELOPMENT
+// ============================================
+
 if (process.env.VERCEL !== "1") {
   const PORT = process.env.PORT || 5000;
 
@@ -97,5 +147,8 @@ if (process.env.VERCEL !== "1") {
   });
 }
 
-// Export for Vercel
+// ============================================
+// VERCEL EXPORT
+// ============================================
+
 module.exports = app;
