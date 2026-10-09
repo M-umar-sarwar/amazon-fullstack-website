@@ -1,22 +1,42 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-require('dotenv').config();
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+require("dotenv").config();
 
 const app = express();
 
-// Middlewares
-app.use(cors()); // Allow Frontend to make requests
-app.use(express.json()); // JSON parsing
+app.use(cors());
+app.use(express.json());
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('✅ Connected to MongoDB Database'))
-  .catch((err) => console.error('❌ Database Connection Error:', err));
+app.get("/", (req, res) => {
+  res.send("Amazon Clone API is running");
+});
 
-// Routes
-const productRoutes = require('./routes/productRoutes');
-app.use('/api/products', productRoutes);
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" });
+});
+
+// Correct product route path
+app.use("/api/products", require("./productRoutes"));
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+const MONGO_URI = process.env.MONGO_URI;
+
+if (!MONGO_URI) {
+  console.error("MONGO_URI environment variable is missing.");
+  process.exit(1);
+}
+
+mongoose
+  .connect(MONGO_URI)
+  .then(() => {
+    console.log("MongoDB connected successfully.");
+
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error("MongoDB connection failed:", error.message);
+    process.exit(1);
+  });
