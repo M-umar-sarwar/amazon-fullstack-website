@@ -157,11 +157,8 @@ function saveState() {
 // 5. FETCH PRODUCTS FROM MONGODB
 // ============================================
 
-// Load products from Vercel API / MongoDB
-// Load products from Vercel API / MongoDB
 async function fetchProducts() {
     try {
-        // Use the global API_URL defined at the top of script.js
         console.log("Loading MongoDB products:", API_URL);
 
         const response = await fetch(API_URL, {
@@ -194,34 +191,14 @@ async function fetchProducts() {
         }));
 
         console.log("MongoDB products loaded:", data.length);
-
         renderProducts();
 
     } catch (error) {
         console.error("MongoDB loading error:", error);
-
-        const grid = document.getElementById("productGrid");
-        const count = document.getElementById("productCountBadge");
-
-        if (count) {
-            count.textContent = "(Live products failed to load)";
-        }
-
-        if (grid && !document.getElementById("dbLoadNotice")) {
-            const notice = document.createElement("div");
-
-            notice.id = "dbLoadNotice";
-            notice.className =
-                "col-span-full rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900";
-
-            notice.textContent =
-                "Live products could not load. Check the browser Console.";
-
-            grid.prepend(notice);
-        }
     }
 }
 
+window.fetchProducts = fetchProducts;
 window.fetchProducts = fetchProducts;
         window.appState.serverProducts = data.map(product => ({
             ...product,
