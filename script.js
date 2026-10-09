@@ -158,23 +158,30 @@ function saveState() {
 // 5. FETCH PRODUCTS FROM MONGODB
 // ============================================
 
+// Load products from Vercel API / MongoDB
 async function fetchProducts() {
+    const API_URL =
+        "https://amazon-fullstack-website-igxfcg7wo-umarsarwar736-3747.vercel.app/api/products";
+
     try {
+        console.log("Loading MongoDB products...");
+
         const response = await fetch(API_URL, {
             method: "GET",
             headers: {
                 Accept: "application/json"
-            }
+            },
+            cache: "no-store"
         });
 
         if (!response.ok) {
-            throw new Error(`Products API error: ${response.status}`);
+            throw new Error(`API status: ${response.status}`);
         }
 
         const data = await response.json();
 
         if (!Array.isArray(data)) {
-            throw new Error("The API did not return a product array.");
+            throw new Error("API did not return a product list.");
         }
 
         window.appState.serverProducts = data.map(product => ({
@@ -188,15 +195,36 @@ async function fetchProducts() {
             isPrime: Boolean(product.isPrime)
         }));
 
+        console.log("MongoDB products loaded:", data.length);
+
         renderProducts();
+
     } catch (error) {
-        console.error("MongoDB products could not load:", error.message);
+        console.error("MongoDB loading error:", error);
+
+        const grid = document.getElementById("productGrid");
+        const count = document.getElementById("productCountBadge");
+
+        if (count) {
+            count.textContent = "(Live products failed to load)";
+        }
+
+        if (grid && !document.getElementById("dbLoadNotice")) {
+            const notice = document.createElement("div");
+
+            notice.id = "dbLoadNotice";
+            notice.className =
+                "col-span-full rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900";
+
+            notice.textContent =
+                "Live products could not load. Open the browser Console to check the error.";
+
+            grid.prepend(notice);
+        }
     }
 }
 
-window.fetchProducts = fetchProducts;
-
-// ============================================
+window.fetchProducts = fetchProducts;// ============================================
 // 6. GET ALL PRODUCTS
 // ============================================
 
