@@ -4,7 +4,7 @@
    Vercel API + MongoDB
    ============================================ */
 
-const API_URL = "https://amazon-fullstack-website-igxfcg7wo-umarsarwar736-3747.vercel.app/api/products";
+const API_URL = "https://amazon-fullstack-website.vercel.app/api/products";
 
 // ============================================
 // 1. DEMO PRODUCTS
