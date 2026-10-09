@@ -1,6 +1,5 @@
-// Local Development URL
-const API_URL = 'http://localhost:5000/api/products';
-
+// Development URL
+const API_URL = 'https://amazon-fullstack-website-igxfcg7wo-umarsarwar736-3747.vercel.app/api/products';
 // 1. GET ALL PRODUCTS
 async function fetchProducts() {
   try {
