@@ -1,10 +1,12 @@
 
 /* ============================================
-   AMAZON CLONE — FRONTEND JAVASCRIPT
+   AMAZON CLONE - FRONTEND JAVASCRIPT
    Vercel API + MongoDB
    ============================================ */
 
-const API_URL = "https://amazon-fullstack-website.vercel.app/api/products";
+const API_URL =
+    "https://amazon-fullstack-website.vercel.app/api/products";
+
 // ============================================
 // 1. DEMO PRODUCTS
 // ============================================
@@ -25,7 +27,7 @@ const INITIAL_PRODUCTS = [
         id: "prod_2",
         title: "Sony WH-1000XM5 Wireless Headphones",
         category: "Electronics",
-        price: 348.00,
+        price: 348,
         rating: 4.7,
         reviewsCount: 8920,
         isPrime: true,
@@ -36,7 +38,7 @@ const INITIAL_PRODUCTS = [
         id: "prod_3",
         title: "Minimalist Modern Ergonomic Desk Chair",
         category: "Home & Kitchen",
-        price: 129.50,
+        price: 129.5,
         rating: 4.4,
         reviewsCount: 3410,
         isPrime: true,
@@ -47,7 +49,7 @@ const INITIAL_PRODUCTS = [
         id: "prod_4",
         title: "Nike Air Max Running Shoes",
         category: "Fashion",
-        price: 110.00,
+        price: 110,
         rating: 4.6,
         reviewsCount: 5612,
         isPrime: true,
@@ -101,7 +103,7 @@ const INITIAL_PRODUCTS = [
 ];
 
 // ============================================
-// 2. SAFE LOCAL STORAGE
+// 2. LOCAL STORAGE
 // ============================================
 
 function readStorage(key) {
@@ -109,14 +111,10 @@ function readStorage(key) {
         const value = JSON.parse(localStorage.getItem(key) || "[]");
         return Array.isArray(value) ? value : [];
     } catch (error) {
-        console.error("Local storage read error:", error.message);
+        console.error("Storage error:", error.message);
         return [];
     }
 }
-
-// ============================================
-// 3. GLOBAL APPLICATION STATE
-// ============================================
 
 window.appState = {
     customProducts: readStorage("amz_custom_products"),
@@ -127,10 +125,6 @@ window.appState = {
     searchQuery: "",
     sortBy: "featured"
 };
-
-// ============================================
-// 4. SAVE LOCAL STATE
-// ============================================
 
 function saveState() {
     try {
@@ -149,12 +143,12 @@ function saveState() {
             JSON.stringify(window.appState.orders)
         );
     } catch (error) {
-        console.error("Could not save local state:", error.message);
+        console.error("Could not save state:", error.message);
     }
 }
 
 // ============================================
-// 5. FETCH PRODUCTS FROM MONGODB
+// 3. FETCH PRODUCTS FROM MONGODB
 // ============================================
 
 async function fetchProducts() {
@@ -170,13 +164,13 @@ async function fetchProducts() {
         });
 
         if (!response.ok) {
-            throw new Error(`API status: ${response.status}`);
+            throw new Error(`API request failed: ${response.status}`);
         }
 
         const data = await response.json();
 
         if (!Array.isArray(data)) {
-            throw new Error("API did not return a product list.");
+            throw new Error("API response is not a product list.");
         }
 
         window.appState.serverProducts = data.map(product => ({
@@ -190,58 +184,27 @@ async function fetchProducts() {
             isPrime: Boolean(product.isPrime)
         }));
 
-        console.log("MongoDB products loaded:", data.length);
-        renderProducts();
-
-    } catch (error) {
-        console.error("MongoDB loading error:", error);
-    }
-}
-
-window.fetchProducts = fetchProducts;
-window.fetchProducts = fetchProducts;
-        window.appState.serverProducts = data.map(product => ({
-            ...product,
-            id: String(product._id || product.id),
-            isServerProduct: Boolean(product._id),
-            rating: Number(product.rating ?? 4.5),
-            reviewsCount: Number(
-                product.reviewsCount ?? product.reviews ?? 0
-            ),
-            isPrime: Boolean(product.isPrime)
-        }));
+        const notice = document.getElementById("dbLoadNotice");
+        if (notice) notice.remove();
 
         console.log("MongoDB products loaded:", data.length);
 
         renderProducts();
-
     } catch (error) {
         console.error("MongoDB loading error:", error);
 
-        const grid = document.getElementById("productGrid");
         const count = document.getElementById("productCountBadge");
 
         if (count) {
             count.textContent = "(Live products failed to load)";
         }
-
-        if (grid && !document.getElementById("dbLoadNotice")) {
-            const notice = document.createElement("div");
-
-            notice.id = "dbLoadNotice";
-            notice.className =
-                "col-span-full rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900";
-
-            notice.textContent =
-                "Live products could not load. Open the browser Console to check the error.";
-
-            grid.prepend(notice);
-        }
     }
 }
 
-window.fetchProducts = fetchProducts;// ============================================
-// 6. GET ALL PRODUCTS
+window.fetchProducts = fetchProducts;
+
+// ============================================
+// 4. GET ALL PRODUCTS
 // ============================================
 
 function getAllProducts() {
@@ -255,20 +218,19 @@ function getAllProducts() {
 window.getAllProducts = getAllProducts;
 
 // ============================================
-// 7. RENDER PRODUCT CARDS
+// 5. RENDER PRODUCTS
 // ============================================
 
 function renderProducts() {
     const container = document.getElementById("productGrid");
 
     if (!container) {
-        console.error("Product grid element was not found.");
+        console.error("Product grid element not found.");
         return;
     }
 
     let products = getAllProducts();
 
-    // Category filter
     if (window.appState.selectedCategory !== "All") {
         products = products.filter(
             product =>
@@ -276,7 +238,6 @@ function renderProducts() {
         );
     }
 
-    // Search filter
     const query = window.appState.searchQuery.trim().toLowerCase();
 
     if (query) {
@@ -286,7 +247,6 @@ function renderProducts() {
         );
     }
 
-    // Sorting
     if (window.appState.sortBy === "lowToHigh") {
         products.sort((a, b) => Number(a.price) - Number(b.price));
     } else if (window.appState.sortBy === "highToLow") {
@@ -411,7 +371,7 @@ function renderProducts() {
 window.renderProducts = renderProducts;
 
 // ============================================
-// 8. ADD PRODUCT TO CART
+// 6. CART
 // ============================================
 
 window.addToCart = function(productId, quantity = 1) {
@@ -444,13 +404,8 @@ window.addToCart = function(productId, quantity = 1) {
 
     saveState();
     updateCartUI();
-
     showToast(`Added "${product.title.substring(0, 22)}" to cart.`);
 };
-
-// ============================================
-// 9. UPDATE CART QUANTITY
-// ============================================
 
 window.updateCartQty = function(docId, change) {
     const index = window.appState.cart.findIndex(
@@ -472,10 +427,6 @@ window.updateCartQty = function(docId, change) {
     updateCartUI();
 };
 
-// ============================================
-// 10. REMOVE ITEM FROM CART
-// ============================================
-
 window.removeFromCart = function(docId) {
     window.appState.cart = window.appState.cart.filter(
         item => item.docId !== docId
@@ -484,10 +435,6 @@ window.removeFromCart = function(docId) {
     saveState();
     updateCartUI();
 };
-
-// ============================================
-// 11. UPDATE CART UI
-// ============================================
 
 function updateCartUI() {
     const cart = window.appState.cart;
@@ -531,15 +478,11 @@ function updateCartUI() {
 
     container.innerHTML = cart.map(item => `
         <div class="flex space-x-3 p-3 bg-slate-50 rounded-2xl border border-slate-200/80 text-xs items-center">
-            <img
-                src="${item.image || ""}"
-                alt="${item.title}"
+            <img src="${item.image || ""}" alt="${item.title}"
                 class="w-16 h-16 object-contain rounded-xl bg-white p-1 border flex-shrink-0">
 
             <div class="flex-1 min-w-0">
-                <h4 class="font-bold text-slate-800 truncate">
-                    ${item.title}
-                </h4>
+                <h4 class="font-bold text-slate-800 truncate">${item.title}</h4>
 
                 <p class="font-black text-slate-900 text-sm mt-0.5">
                     $${(Number(item.price) * Number(item.quantity)).toFixed(2)}
@@ -547,25 +490,20 @@ function updateCartUI() {
 
                 <div class="flex items-center space-x-2 mt-2">
                     <div class="flex items-center border rounded-lg bg-white">
-                        <button
-                            onclick="updateCartQty('${item.docId}', -1)"
+                        <button onclick="updateCartQty('${item.docId}', -1)"
                             class="p-1 hover:bg-slate-100 text-slate-600">
                             <i class="fa-solid fa-minus text-[10px]"></i>
                         </button>
 
-                        <span class="px-2 font-bold text-slate-800">
-                            ${item.quantity}
-                        </span>
+                        <span class="px-2 font-bold text-slate-800">${item.quantity}</span>
 
-                        <button
-                            onclick="updateCartQty('${item.docId}', 1)"
+                        <button onclick="updateCartQty('${item.docId}', 1)"
                             class="p-1 hover:bg-slate-100 text-slate-600">
                             <i class="fa-solid fa-plus text-[10px]"></i>
                         </button>
                     </div>
 
-                    <button
-                        onclick="removeFromCart('${item.docId}')"
+                    <button onclick="removeFromCart('${item.docId}')"
                         class="text-rose-500 hover:underline text-[11px] font-bold">
                         Delete
                     </button>
@@ -578,7 +516,7 @@ function updateCartUI() {
 window.updateCartUI = updateCartUI;
 
 // ============================================
-// 12. ADD PRODUCT FROM THE WEBSITE FORM
+// 7. ADD PRODUCT TO MONGODB
 // ============================================
 
 window.handleCreateProduct = async function(event) {
@@ -596,23 +534,15 @@ window.handleCreateProduct = async function(event) {
         return;
     }
 
-    const newProduct = {
+    const product = {
         title: titleField.value.trim(),
         category: categoryField.value,
         price: Number(priceField.value),
-        image: imageField
-            ? imageField.value.trim()
-            : "",
-        description: descriptionField
-            ? descriptionField.value.trim()
-            : ""
+        image: imageField ? imageField.value.trim() : "",
+        description: descriptionField ? descriptionField.value.trim() : ""
     };
 
-    if (
-        !newProduct.title ||
-        !Number.isFinite(newProduct.price) ||
-        newProduct.price <= 0
-    ) {
+    if (!product.title || !Number.isFinite(product.price) || product.price <= 0) {
         showToast("Enter a valid product title and price.");
         return;
     }
@@ -629,15 +559,13 @@ window.handleCreateProduct = async function(event) {
                 "Content-Type": "application/json",
                 Accept: "application/json"
             },
-            body: JSON.stringify(newProduct)
+            body: JSON.stringify(product)
         });
 
         const result = await response.json().catch(() => ({}));
 
         if (!response.ok) {
-            throw new Error(
-                result.error || `Product save failed: ${response.status}`
-            );
+            throw new Error(result.error || `Save failed: ${response.status}`);
         }
 
         await fetchProducts();
@@ -645,13 +573,13 @@ window.handleCreateProduct = async function(event) {
         closeAddProductModal();
         showToast("Product saved to MongoDB.");
 
-        if (titleField) titleField.value = "";
-        if (priceField) priceField.value = "";
+        titleField.value = "";
+        priceField.value = "";
         if (imageField) imageField.value = "";
         if (descriptionField) descriptionField.value = "";
     } catch (error) {
-        console.error("Could not save product:", error.message);
-        showToast("Product save failed. Check backend connection.");
+        console.error("Product save failed:", error.message);
+        showToast("Product could not be saved.");
     } finally {
         if (submitButton) {
             submitButton.disabled = false;
@@ -661,27 +589,27 @@ window.handleCreateProduct = async function(event) {
     }
 };
 
-// Support an older form if index.html uses handleProductSubmit.
+// Compatibility with an older form using prodTitle IDs
 window.handleProductSubmit = async function(event) {
     event.preventDefault();
 
-    const titleField = document.getElementById("prodTitle");
-    const priceField = document.getElementById("prodPrice");
-    const categoryField = document.getElementById("prodCategory");
-    const imageField = document.getElementById("prodImageUrl");
-    const descriptionField = document.getElementById("prodDesc");
+    const title = document.getElementById("prodTitle");
+    const price = document.getElementById("prodPrice");
+    const category = document.getElementById("prodCategory");
+    const image = document.getElementById("prodImageUrl");
+    const description = document.getElementById("prodDesc");
 
-    if (!titleField || !priceField || !categoryField) {
+    if (!title || !price || !category) {
         showToast("Product form fields were not found.");
         return;
     }
 
     const product = {
-        title: titleField.value.trim(),
-        price: Number(priceField.value),
-        category: categoryField.value,
-        image: imageField ? imageField.value.trim() : "",
-        description: descriptionField ? descriptionField.value.trim() : ""
+        title: title.value.trim(),
+        price: Number(price.value),
+        category: category.value,
+        image: image ? image.value.trim() : "",
+        description: description ? description.value.trim() : ""
     };
 
     if (!product.title || !Number.isFinite(product.price) || product.price <= 0) {
@@ -697,7 +625,7 @@ window.handleProductSubmit = async function(event) {
         });
 
         if (!response.ok) {
-            throw new Error(`Product save failed: ${response.status}`);
+            throw new Error(`Save failed: ${response.status}`);
         }
 
         await fetchProducts();
@@ -710,12 +638,11 @@ window.handleProductSubmit = async function(event) {
 };
 
 // ============================================
-// 13. DELETE DATABASE PRODUCT
+// 8. DELETE PRODUCTS
 // ============================================
 
 window.deleteProduct = async function(productId) {
     if (!productId) return;
-
     if (!confirm("Delete this database product?")) return;
 
     try {
@@ -732,7 +659,7 @@ window.deleteProduct = async function(productId) {
 
         window.appState.serverProducts =
             window.appState.serverProducts.filter(
-                product => String(product.id) !== String(productId)
+                item => String(item.id) !== String(productId)
             );
 
         renderProducts();
@@ -742,10 +669,6 @@ window.deleteProduct = async function(productId) {
         showToast("Could not delete product.");
     }
 };
-
-// ============================================
-// 14. DELETE LOCAL CUSTOM PRODUCT
-// ============================================
 
 window.deleteCustomProduct = function(id) {
     window.appState.customProducts =
@@ -758,14 +681,9 @@ window.deleteCustomProduct = function(id) {
     showToast("Local product deleted.");
 };
 
-// ============================================
-// 15. PRESET IMAGE SELECTOR
-// ============================================
-
 window.selectPresetImage = function(url, element) {
-    const imageField = document.getElementById("newProdImage");
-
-    if (imageField) imageField.value = url;
+    const field = document.getElementById("newProdImage");
+    if (field) field.value = url;
 
     document.querySelectorAll(".preset-img-btn").forEach(button => {
         button.classList.remove("border-amzOrange");
@@ -779,7 +697,7 @@ window.selectPresetImage = function(url, element) {
 };
 
 // ============================================
-// 16. PLACE ORDER
+// 9. CHECKOUT DEMO
 // ============================================
 
 window.handlePlaceOrder = function(event) {
@@ -800,7 +718,7 @@ window.handlePlaceOrder = function(event) {
     const tax = subtotal * 0.08;
     const total = subtotal + tax;
 
-    const getValue = id => {
+    const value = id => {
         const element = document.getElementById(id);
         return element ? element.value : "";
     };
@@ -812,12 +730,12 @@ window.handlePlaceOrder = function(event) {
         subtotal,
         total,
         shippingAddress: {
-            name: getValue("shipName"),
-            address: getValue("shipAddress"),
-            city: getValue("shipCity"),
-            zip: getValue("shipZip")
+            name: value("shipName"),
+            address: value("shipAddress"),
+            city: value("shipCity"),
+            zip: value("shipZip")
         },
-        paymentMethod: getValue("payMethod"),
+        paymentMethod: value("payMethod"),
         status: "Order Placed (Demo)",
         createdAt: new Date().toISOString()
     };
@@ -832,20 +750,15 @@ window.handlePlaceOrder = function(event) {
     closeCheckoutModal();
     closeCartDrawer();
     switchView("orders");
-
     showToast("Demo order placed successfully.");
 };
 
-// ============================================
-// 17. RENDER ORDER HISTORY
-// ============================================
-
 function updateOrdersUI() {
     const orders = window.appState.orders;
-    const countBadge = document.getElementById("ordersCountBadge");
+    const badge = document.getElementById("ordersCountBadge");
     const container = document.getElementById("ordersListContainer");
 
-    if (countBadge) countBadge.textContent = orders.length;
+    if (badge) badge.textContent = orders.length;
     if (!container) return;
 
     if (orders.length === 0) {
@@ -855,8 +768,7 @@ function updateOrdersUI() {
                 <p class="font-bold text-slate-600 text-sm">
                     You haven't placed any orders yet.
                 </p>
-                <button
-                    onclick="switchView('shop')"
+                <button onclick="switchView('shop')"
                     class="px-4 py-2 bg-amzBtn font-bold text-xs rounded-xl hover:bg-amzBtnHover">
                     Start Shopping Today
                 </button>
@@ -902,9 +814,7 @@ function updateOrdersUI() {
             <div class="p-4 space-y-3">
                 ${(order.items || []).map(item => `
                     <div class="flex items-center space-x-3 text-xs border-b border-slate-100 pb-3 last:border-0 last:pb-0">
-                        <img
-                            src="${item.image || ""}"
-                            alt="${item.title || "Product"}"
+                        <img src="${item.image || ""}" alt="${item.title || "Product"}"
                             class="w-14 h-14 object-contain rounded-lg bg-gray-50 p-1 border">
 
                         <div class="flex-1">
@@ -916,8 +826,7 @@ function updateOrdersUI() {
                             </p>
                         </div>
 
-                        <button
-                            onclick="addToCart('${item.id}')"
+                        <button onclick="addToCart('${item.id}')"
                             class="px-3 py-1.5 bg-amzYellow/30 hover:bg-amzYellow text-slate-800 font-bold rounded-lg transition">
                             Buy again
                         </button>
@@ -931,7 +840,7 @@ function updateOrdersUI() {
 window.updateOrdersUI = updateOrdersUI;
 
 // ============================================
-// 18. CATEGORY FILTER
+// 10. CATEGORY, SEARCH AND SORT
 // ============================================
 
 window.showCategory = function(category) {
@@ -952,56 +861,40 @@ window.handleCategoryFilterChange = function(category) {
     showCategory(category);
 };
 
-// ============================================
-// 19. SEARCH
-// ============================================
-
 window.filterProductsBySearch = function() {
-    const searchInput = document.getElementById("searchInput");
-
-    window.appState.searchQuery = searchInput
-        ? searchInput.value
-        : "";
-
+    const input = document.getElementById("searchInput");
+    window.appState.searchQuery = input ? input.value : "";
     renderProducts();
 };
-
-// ============================================
-// 20. SORT
-// ============================================
 
 window.sortProducts = function() {
     const select = document.getElementById("sortBySelect");
-
-    window.appState.sortBy = select
-        ? select.value
-        : "featured";
-
+    window.appState.sortBy = select ? select.value : "featured";
     renderProducts();
 };
 
 // ============================================
-// 21. VIEW NAVIGATION
+// 11. NAVIGATION
 // ============================================
 
 window.switchView = function(view) {
-    const shopView = document.getElementById("shopView");
-    const ordersView = document.getElementById("ordersView");
+    const shop = document.getElementById("shopView");
+    const orders = document.getElementById("ordersView");
 
-    if (shopView) shopView.classList.add("hidden");
-    if (ordersView) ordersView.classList.add("hidden");
+    if (shop) shop.classList.add("hidden");
+    if (orders) orders.classList.add("hidden");
 
-    if (view === "shop" && shopView) {
-        shopView.classList.remove("hidden");
+    if (view === "shop" && shop) {
+        shop.classList.remove("hidden");
     }
 
-    if (view === "orders" && ordersView) {
-        ordersView.classList.remove("hidden");
+    if (view === "orders" && orders) {
+        orders.classList.remove("hidden");
     }
 };
 
 // ============================================
-// 22. CART DRAWER
+// 12. CART DRAWER
 // ============================================
 
 window.openCartDrawer = function() {
@@ -1021,7 +914,7 @@ window.closeCartDrawer = function() {
 };
 
 // ============================================
-// 23. CHECKOUT MODAL
+// 13. CHECKOUT MODAL
 // ============================================
 
 window.openCheckoutModal = function() {
@@ -1057,7 +950,7 @@ window.closeCheckoutModal = function() {
 };
 
 // ============================================
-// 24. ADD PRODUCT MODAL
+// 14. ADD PRODUCT MODAL
 // ============================================
 
 window.openAddProductModal = function() {
@@ -1077,7 +970,7 @@ window.closeAddProductModal = function() {
 };
 
 // ============================================
-// 25. PRODUCT DETAILS MODAL
+// 15. PRODUCT DETAILS MODAL
 // ============================================
 
 window.openProductDetailModal = function(id) {
@@ -1094,8 +987,7 @@ window.openProductDetailModal = function(id) {
 
     container.innerHTML = `
         <div class="w-full h-64 bg-gray-50 rounded-2xl flex items-center justify-center p-4 border">
-            <img
-                src="${product.image || ""}"
+            <img src="${product.image || ""}"
                 alt="${product.title || "Product"}"
                 class="max-h-full object-contain">
         </div>
@@ -1140,19 +1032,19 @@ window.closeProductDetailModal = function() {
 };
 
 // ============================================
-// 26. TOAST NOTIFICATION
+// 16. TOAST NOTIFICATION
 // ============================================
 
 window.showToast = function(message) {
     const toast = document.getElementById("toast");
-    const toastText = document.getElementById("toastText");
+    const text = document.getElementById("toastText");
 
-    if (!toast || !toastText) {
+    if (!toast || !text) {
         console.log(message);
         return;
     }
 
-    toastText.textContent = message;
+    text.textContent = message;
     toast.classList.remove("hidden");
 
     setTimeout(() => {
@@ -1161,15 +1053,13 @@ window.showToast = function(message) {
 };
 
 // ============================================
-// 27. INITIALIZE APPLICATION
+// 17. INITIALIZE APPLICATION
 // ============================================
 
 function initializeApp() {
     renderProducts();
     updateCartUI();
     updateOrdersUI();
-
-    // Load MongoDB products and render them with the demo products.
     fetchProducts();
 }
 
