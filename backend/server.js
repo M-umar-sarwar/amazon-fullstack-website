@@ -1,52 +1,37 @@
 
 const express = require("express");
 const mongoose = require("mongoose");
+const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
 
-// ============================================
-// CORS — allow the GitHub Pages frontend
-// ============================================
-
+// Allow the GitHub Pages frontend
 const allowedOrigins = new Set([
   "https://m-umar-sarwar.github.io",
   "http://localhost:5500",
   "http://127.0.0.1:5500"
 ]);
 
-// CORS headers must be set before routes and database handling.
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests without an Origin header, such as server-side tests.
+    if (!origin || allowedOrigins.has(origin)) {
+      return callback(null, true);
+    }
 
-  if (origin && allowedOrigins.has(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-  }
+    return callback(new Error("Origin not allowed by CORS"));
+  },
+  methods: ["GET", "POST", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Accept", "Authorization"],
+  optionsSuccessStatus: 204
+};
 
-  res.setHeader("Vary", "Origin");
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET, POST, DELETE, OPTIONS"
-  );
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Accept, Authorization"
-  );
-
-  // Handle browser preflight requests.
-  if (req.method === "OPTIONS") {
-    return res.status(204).end();
-  }
-
-  next();
-});
-
+// CORS must run before routes and database middleware
+app.use(cors(corsOptions));
 app.use(express.json());
 
-// ============================================
-// MONGODB CONNECTION
-// ============================================
-
+// MongoDB connection cache for Vercel
 const cached = global.mongooseCache ||
   (global.mongooseCache = {
     connection: null,
@@ -61,7 +46,7 @@ async function connectDB() {
   const uri = process.env.MONGO_URI;
 
   if (!uri) {
-    throw new Error("MONGO_URI is missing.");
+    throw new Error("MONGO_URI is missing from environment variables.");
   }
 
   if (!cached.promise) {
@@ -80,26 +65,21 @@ async function connectDB() {
   return cached.connection;
 }
 
-// ============================================
-// HEALTH CHECKS
-// ============================================
-
+// API home
 app.get("/", (req, res) => {
   res.json({
     message: "Amazon Clone API is running"
   });
 });
 
+// Health check
 app.get("/health", (req, res) => {
   res.json({
     status: "ok"
   });
 });
 
-// ============================================
-// CONNECT DATABASE BEFORE PRODUCT REQUESTS
-// ============================================
-
+// Connect MongoDB before product requests
 app.use("/api/products", async (req, res, next) => {
   try {
     await connectDB();
@@ -113,16 +93,10 @@ app.use("/api/products", async (req, res, next) => {
   }
 });
 
-// ============================================
-// PRODUCT ROUTES
-// ============================================
-
+// Load product routes
 app.use("/api/products", require("./productRoutes"));
 
-// ============================================
-// GENERAL ERROR HANDLER
-// ============================================
-
+// General error handler
 app.use((error, req, res, next) => {
   console.error("API error:", error.message);
 
@@ -135,10 +109,7 @@ app.use((error, req, res, next) => {
   });
 });
 
-// ============================================
-// LOCAL DEVELOPMENT
-// ============================================
-
+// Local development only
 if (process.env.VERCEL !== "1") {
   const PORT = process.env.PORT || 5000;
 
@@ -147,8 +118,5 @@ if (process.env.VERCEL !== "1") {
   });
 }
 
-// ============================================
-// VERCEL EXPORT
-// ============================================
-
+// Export for Vercel
 module.exports = app;
